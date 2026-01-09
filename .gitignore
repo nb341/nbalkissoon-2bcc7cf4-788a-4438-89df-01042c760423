@@ -42,3 +42,24 @@ Thumbs.db
 .nx/workspace-data
 
 .angular
+
+# Environment files
+.env
+.env.development
+.env.production
+.env.test
+!.env.example
+
+# Logs
+logs/
+*.log
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

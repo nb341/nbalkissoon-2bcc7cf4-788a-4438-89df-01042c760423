@@ -14,7 +14,14 @@
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
-    "paths": {}
+    "paths": {
+      "@nbalkissoon-2bcc7cf4-788a-4438-89df-01042c760423/data": [
+        "libs/data/src/index.ts"
+      ],
+      "@nbalkissoon-2bcc7cf4-788a-4438-89df-01042c760423/auth": [
+        "libs/auth/src/index.ts"
+      ]
+    }
   },
   "exclude": ["node_modules", "tmp"]
 }

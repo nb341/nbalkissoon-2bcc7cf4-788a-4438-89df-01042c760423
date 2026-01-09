@@ -1,0 +1,10 @@
+# Environment files
+.env
+.env.development
+.env.production
+.env.test
+!.env.example
+
+# Logs
+logs/
+*.logl

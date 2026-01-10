@@ -6,6 +6,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { getDatabaseConfig } from '../config';
 import { AuthModule, JwtAuthGuard } from '../modules/auth';
+import { TasksModule } from '../modules/tasks';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { AuthModule, JwtAuthGuard } from '../modules/auth';
     }),
     TypeOrmModule.forRoot(getDatabaseConfig()),
     AuthModule,
+    TasksModule,
   ],
   controllers: [AppController],
   providers: [

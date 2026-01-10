@@ -1,0 +1,27 @@
+﻿services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: taskmanager_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: devpassword
+      POSTGRES_DB: taskmanager_dev
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  postgres_test:
+    image: postgres:16-alpine
+    container_name: taskmanager_db_test
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: testpassword
+      POSTGRES_DB: taskmanager_test
+    ports:
+      - '5433:5432'
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

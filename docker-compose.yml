@@ -1,4 +1,6 @@
-﻿services:
+version: '3.8'
+
+services:
   postgres:
     image: postgres:16-alpine
     container_name: taskmanager_db
@@ -10,6 +12,47 @@
       - '5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: taskmanager_api
+    environment:
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_NAME: taskmanager_dev
+      DATABASE_USER: postgres
+      DATABASE_PASSWORD: devpassword
+      JWT_SECRET: docker-secret-key-change-in-production-min-32-chars
+      JWT_EXPIRES_IN: 1h
+      JWT_REFRESH_SECRET: docker-refresh-secret-change-in-production
+      JWT_REFRESH_EXPIRES_IN: 7d
+      NODE_ENV: production
+      PORT: 3000
+      CORS_ORIGIN: http://localhost
+    ports:
+      - '3000:3000'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: apps/dashboard/Dockerfile
+    container_name: taskmanager_dashboard
+    ports:
+      - '80:80'
+    depends_on:
+      - api
     restart: unless-stopped
 
   postgres_test:

@@ -1,13 +1,14 @@
-﻿import { Injectable } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { LoginDto, LoginResponseDto, RegisterDto, RegisterResponseDto } from '@nbalkissoon-2bcc7cf4-788a-4438-89df-01042c760423/data';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
-  private readonly apiUrl = 'http://localhost:3000/api/auth';
+  private readonly apiUrl = environment.apiUrl + '/auth';
   private readonly TOKEN_KEY = 'access_token';
   private readonly REFRESH_TOKEN_KEY = 'refresh_token';
   private readonly USER_KEY = 'user';
@@ -41,7 +42,6 @@ export class AuthService {
     const token = this.getAccessToken();
     if (!token) return false;
     
-    // Check if token is expired
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
       return payload.exp * 1000 > Date.now();

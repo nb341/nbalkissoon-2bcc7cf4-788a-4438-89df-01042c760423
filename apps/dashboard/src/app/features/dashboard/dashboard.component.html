@@ -1,0 +1,35 @@
+<div class="min-h-screen bg-gray-100">
+  <nav class="bg-white shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16">
+        <div class="flex items-center">
+          <h1 class="text-xl font-bold text-gray-900">Task Manager</h1>
+        </div>
+        <div class="flex items-center space-x-4">
+          @if (user$ | async; as user) {
+            <span class="text-sm text-gray-700">
+              {{ user.firstName }} {{ user.lastName }}
+              <span class="ml-2 px-2 py-1 text-xs rounded-full bg-indigo-100 text-indigo-800">
+                {{ user.role }}
+              </span>
+            </span>
+          }
+          <button
+            (click)="logout()"
+            class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+          >
+            Logout
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <div class="px-4 py-6 sm:px-0">
+      <div class="border-4 border-dashed border-gray-200 rounded-lg h-96 flex items-center justify-center">
+        <p class="text-gray-500 text-lg">Task Management Dashboard - Coming in next feature branch</p>
+      </div>
+    </div>
+  </main>
+</div>

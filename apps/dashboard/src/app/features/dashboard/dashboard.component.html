@@ -25,11 +25,58 @@
     </div>
   </nav>
 
-  <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-    <div class="px-4 py-6 sm:px-0">
-      <div class="border-4 border-dashed border-gray-200 rounded-lg h-96 flex items-center justify-center">
-        <p class="text-gray-500 text-lg">Task Management Dashboard - Coming in next feature branch</p>
+  <main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <!-- Stats -->
+    @if (stats$ | async; as stats) {
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <p class="text-sm text-gray-500">Total Tasks</p>
+          <p class="text-2xl font-bold text-gray-900">{{ stats.total }}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <p class="text-sm text-gray-500">To Do</p>
+          <p class="text-2xl font-bold text-yellow-600">{{ stats.todo }}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <p class="text-sm text-gray-500">In Progress</p>
+          <p class="text-2xl font-bold text-blue-600">{{ stats.inProgress }}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <p class="text-sm text-gray-500">Completed</p>
+          <p class="text-2xl font-bold text-green-600">{{ stats.completed }}</p>
+        </div>
       </div>
-    </div>
+    }
+
+    <!-- Error Alert -->
+    @if (error$ | async; as error) {
+      <div class="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+        {{ error }}
+      </div>
+    }
+
+    <!-- Filters -->
+    <app-task-filters
+      (filterChange)="onFilterChange($event)"
+      (createTask)="onCreateTask()"
+    />
+
+    <!-- Task List -->
+    <app-task-list
+      [tasks]="(tasks$ | async) || []"
+      [loading]="(loading$ | async) || false"
+      (edit)="onEditTask($event)"
+      (delete)="onDeleteTask($event)"
+      (statusChange)="onStatusChange($event)"
+      (reorder)="onReorderTask($event)"
+    />
+
+    <!-- Task Modal -->
+    <app-task-modal
+      [isOpen]="isModalOpen"
+      [task]="selectedTask"
+      (close)="onModalClose()"
+      (save)="onSaveTask($event)"
+    />
   </main>
 </div>

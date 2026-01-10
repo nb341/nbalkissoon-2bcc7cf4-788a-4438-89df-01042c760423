@@ -7,14 +7,18 @@ import { provideStoreDevtools } from '@ngrx/store-devtools';
 import { appRoutes } from './app.routes';
 import { jwtInterceptor } from './core/interceptors';
 import { authReducer, AuthEffects } from './store/auth';
+import { tasksReducer, TasksEffects } from './store/tasks';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(appRoutes),
     provideHttpClient(withInterceptors([jwtInterceptor])),
-    provideStore({ auth: authReducer }),
-    provideEffects([AuthEffects]),
+    provideStore({ 
+      auth: authReducer,
+      tasks: tasksReducer,
+    }),
+    provideEffects([AuthEffects, TasksEffects]),
     provideStoreDevtools({
       maxAge: 25,
       logOnly: false,

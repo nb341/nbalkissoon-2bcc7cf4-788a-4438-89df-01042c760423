@@ -155,7 +155,13 @@ export class TasksService {
       return;
     }
 
-    // Admin and Viewer: can only see tasks they created OR are assigned to
+    // Admin can see all tasks in org
+    if (user.role === Role.ADMIN) {
+      query.andWhere('task.organizationId = :orgId', { orgId: user.organizationId });
+      return;
+    }
+
+    // Viewer: can only see tasks they created OR are assigned to
     query.andWhere('task.organizationId = :orgId', { orgId: user.organizationId });
     query.andWhere(
       '(task.createdById = :userId OR task.assignedToId = :userId)',

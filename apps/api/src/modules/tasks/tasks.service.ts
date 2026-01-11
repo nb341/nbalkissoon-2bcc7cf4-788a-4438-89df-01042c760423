@@ -1,4 +1,4 @@
-﻿import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, SelectQueryBuilder } from 'typeorm';
 import { Task, User, AuditLog } from '../../entities';
@@ -28,7 +28,7 @@ export class TasksService {
 
     await this.logAudit(user.id, 'CREATE', 'Task', savedTask.id, null, savedTask);
 
-    return this.findOne(savedTask.id, user);
+    return this.findOneById(savedTask.id);
   }
 
   async findAll(filterDto: TaskFilterDto, user: User) {
@@ -37,8 +37,8 @@ export class TasksService {
       .leftJoinAndSelect('task.createdBy', 'createdBy')
       .leftJoinAndSelect('task.assignedTo', 'assignedTo');
 
-    // Apply organization scope based on role
-    this.applyOrgScope(query, user);
+    // Apply organization and visibility scope based on role
+    this.applyVisibilityScope(query, user);
 
     // Apply filters
     this.applyFilters(query, filterDto);
@@ -69,17 +69,14 @@ export class TasksService {
   }
 
   async findOne(id: string, user: User): Promise<Task> {
-    const query = this.taskRepository
-      .createQueryBuilder('task')
-      .leftJoinAndSelect('task.createdBy', 'createdBy')
-      .leftJoinAndSelect('task.assignedTo', 'assignedTo')
-      .where('task.id = :id', { id });
-
-    this.applyOrgScope(query, user);
-
-    const task = await query.getOne();
+    const task = await this.findOneById(id);
 
     if (!task) {
+      throw new NotFoundException('Task not found');
+    }
+
+    // Check visibility
+    if (!this.canViewTask(task, user)) {
       throw new NotFoundException('Task not found');
     }
 
@@ -87,10 +84,16 @@ export class TasksService {
   }
 
   async update(id: string, updateTaskDto: UpdateTaskDto, user: User): Promise<Task> {
-    const task = await this.findOne(id, user);
+    const task = await this.findOneById(id);
 
-    // Check if user can update this task
-    this.checkUpdatePermission(task, user);
+    if (!task) {
+      throw new NotFoundException('Task not found');
+    }
+
+    // Check update permission (B2 override: Admin can update any task in their org)
+    if (!this.canModifyTask(task, user)) {
+      throw new ForbiddenException('You do not have permission to update this task');
+    }
 
     const oldValue = { ...task };
 
@@ -99,14 +102,20 @@ export class TasksService {
 
     await this.logAudit(user.id, 'UPDATE', 'Task', id, oldValue, updatedTask);
 
-    return this.findOne(id, user);
+    return this.findOneById(id);
   }
 
   async remove(id: string, user: User): Promise<void> {
-    const task = await this.findOne(id, user);
+    const task = await this.findOneById(id);
 
-    // Check if user can delete this task
-    this.checkDeletePermission(task, user);
+    if (!task) {
+      throw new NotFoundException('Task not found');
+    }
+
+    // Check delete permission (B2 override: Admin can delete any task in their org)
+    if (!this.canModifyTask(task, user)) {
+      throw new ForbiddenException('You do not have permission to delete this task');
+    }
 
     await this.logAudit(user.id, 'DELETE', 'Task', id, task, null);
 
@@ -114,26 +123,79 @@ export class TasksService {
   }
 
   async reorder(id: string, newPriority: number, user: User): Promise<Task> {
-    const task = await this.findOne(id, user);
-    this.checkUpdatePermission(task, user);
+    const task = await this.findOneById(id);
+
+    if (!task) {
+      throw new NotFoundException('Task not found');
+    }
+
+    if (!this.canModifyTask(task, user)) {
+      throw new ForbiddenException('You do not have permission to reorder this task');
+    }
 
     task.priority = newPriority;
     await this.taskRepository.save(task);
 
-    return this.findOne(id, user);
+    return this.findOneById(id);
   }
 
-  private applyOrgScope(query: SelectQueryBuilder<Task>, user: User): void {
-    // All users can only see tasks within their organization
-    query.andWhere('task.organizationId = :orgId', { orgId: user.organizationId });
+  private async findOneById(id: string): Promise<Task | null> {
+    return this.taskRepository
+      .createQueryBuilder('task')
+      .leftJoinAndSelect('task.createdBy', 'createdBy')
+      .leftJoinAndSelect('task.assignedTo', 'assignedTo')
+      .where('task.id = :id', { id })
+      .getOne();
+  }
 
-    // Viewers can only see tasks assigned to them or created by them
-    if (user.role === Role.VIEWER) {
-      query.andWhere(
-        '(task.createdById = :userId OR task.assignedToId = :userId)',
-        { userId: user.id },
-      );
+  private applyVisibilityScope(query: SelectQueryBuilder<Task>, user: User): void {
+    // Owner can see all tasks in org hierarchy
+    if (user.role === Role.OWNER) {
+      query.andWhere('task.organizationId = :orgId', { orgId: user.organizationId });
+      return;
     }
+
+    // Admin and Viewer: can only see tasks they created OR are assigned to
+    query.andWhere('task.organizationId = :orgId', { orgId: user.organizationId });
+    query.andWhere(
+      '(task.createdById = :userId OR task.assignedToId = :userId)',
+      { userId: user.id },
+    );
+  }
+
+  private canViewTask(task: Task, user: User): boolean {
+    // Must be same org
+    if (task.organizationId !== user.organizationId) {
+      return false;
+    }
+
+    // Owner can view all tasks in org
+    if (user.role === Role.OWNER) {
+      return true;
+    }
+
+    // Admin and Viewer: can only view if creator or assignee
+    return task.createdById === user.id || task.assignedToId === user.id;
+  }
+
+  private canModifyTask(task: Task, user: User): boolean {
+    // Must be same org
+    if (task.organizationId !== user.organizationId) {
+      return false;
+    }
+
+    // Owner can modify all tasks in org
+    if (user.role === Role.OWNER) {
+      return true;
+    }
+
+    // Admin can modify any task in their org (B2 override)
+    if (user.role === Role.ADMIN) {
+      return true;
+    }
+
+    // Viewer cannot modify tasks
+    return false;
   }
 
   private applyFilters(query: SelectQueryBuilder<Task>, filterDto: TaskFilterDto): void {
@@ -162,30 +224,6 @@ export class TasksService {
         '(task.title ILIKE :search OR task.description ILIKE :search)',
         { search: '%' + filterDto.search + '%' },
       );
-    }
-  }
-
-  private checkUpdatePermission(task: Task, user: User): void {
-    // Owners and Admins can update any task in their org
-    if (user.role === Role.OWNER || user.role === Role.ADMIN) {
-      return;
-    }
-
-    // Viewers can only update tasks they created or are assigned to
-    if (task.createdById !== user.id && task.assignedToId !== user.id) {
-      throw new ForbiddenException('You do not have permission to update this task');
-    }
-  }
-
-  private checkDeletePermission(task: Task, user: User): void {
-    // Only Owners and Admins can delete tasks
-    if (user.role === Role.OWNER || user.role === Role.ADMIN) {
-      return;
-    }
-
-    // Viewers can only delete tasks they created
-    if (task.createdById !== user.id) {
-      throw new ForbiddenException('You do not have permission to delete this task');
     }
   }
 

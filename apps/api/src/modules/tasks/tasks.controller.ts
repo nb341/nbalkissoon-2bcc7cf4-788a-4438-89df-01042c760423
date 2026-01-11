@@ -1,4 +1,4 @@
-﻿import {
+import {
   Controller,
   Get,
   Post,
@@ -15,6 +15,7 @@
 import { TasksService } from './tasks.service';
 import { CreateTaskDto, UpdateTaskDto, TaskFilterDto } from './dto';
 import { User } from '../../entities';
+import { ActiveUserGuard } from '../auth/guards/active-user.guard';
 import {
   Roles,
   Permissions,
@@ -25,7 +26,7 @@ import {
 import { Role, Permission } from '@nbalkissoon-2bcc7cf4-788a-4438-89df-01042c760423/data';
 
 @Controller('tasks')
-@UseGuards(RolesGuard, PermissionsGuard)
+@UseGuards(ActiveUserGuard, RolesGuard, PermissionsGuard)
 export class TasksController {
   constructor(private readonly tasksService: TasksService) {}
 
@@ -58,6 +59,7 @@ export class TasksController {
   }
 
   @Put(':id')
+  @Roles(Role.OWNER, Role.ADMIN)
   @Permissions(Permission.TASK_UPDATE)
   async update(
     @Param('id', ParseUUIDPipe) id: string,
@@ -68,6 +70,7 @@ export class TasksController {
   }
 
   @Delete(':id')
+  @Roles(Role.OWNER, Role.ADMIN)
   @Permissions(Permission.TASK_DELETE)
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(
@@ -78,6 +81,7 @@ export class TasksController {
   }
 
   @Put(':id/reorder')
+  @Roles(Role.OWNER, Role.ADMIN)
   @Permissions(Permission.TASK_UPDATE)
   async reorder(
     @Param('id', ParseUUIDPipe) id: string,

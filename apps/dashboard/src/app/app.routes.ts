@@ -9,10 +9,10 @@ export const appRoutes: Routes = [
   },
   {
     path: 'auth',
-    canActivate: [guestGuard],
     children: [
       {
         path: 'login',
+        canActivate: [guestGuard],
         loadComponent: () =>
           import('./features/auth/login/login.component').then(
             (m) => m.LoginComponent
@@ -20,9 +20,24 @@ export const appRoutes: Routes = [
       },
       {
         path: 'register',
+        canActivate: [guestGuard],
         loadComponent: () =>
           import('./features/auth/register/register.component').then(
             (m) => m.RegisterComponent
+          ),
+      },
+      {
+        path: 'registration-submitted',
+        loadComponent: () =>
+          import('./features/auth/registration-submitted/registration-submitted.component').then(
+            (m) => m.RegistrationSubmittedComponent
+          ),
+      },
+      {
+        path: 'pending',
+        loadComponent: () =>
+          import('./features/auth/pending/pending.component').then(
+            (m) => m.PendingComponent
           ),
       },
       {
@@ -39,6 +54,19 @@ export const appRoutes: Routes = [
       import('./features/dashboard/dashboard.component').then(
         (m) => m.DashboardComponent
       ),
+  },
+  {
+    path: 'admin',
+    canActivate: [authGuard],
+    children: [
+      {
+        path: 'approvals',
+        loadComponent: () =>
+          import('./features/admin/approvals/approvals.component').then(
+            (m) => m.ApprovalsComponent
+          ),
+      },
+    ],
   },
   {
     path: '**',

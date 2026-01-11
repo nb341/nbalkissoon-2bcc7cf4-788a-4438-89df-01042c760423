@@ -26,31 +26,10 @@ describe('RegisterComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should have a register form with all required fields', () => {
-    expect(component.registerForm.contains('firstName')).toBeTruthy();
-    expect(component.registerForm.contains('lastName')).toBeTruthy();
+  it('should have a register form with email, password, and confirmPassword fields', () => {
     expect(component.registerForm.contains('email')).toBeTruthy();
     expect(component.registerForm.contains('password')).toBeTruthy();
     expect(component.registerForm.contains('confirmPassword')).toBeTruthy();
-    expect(component.registerForm.contains('organizationName')).toBeTruthy();
-  });
-
-  it('should require firstName', () => {
-    const control = component.registerForm.get('firstName');
-    control?.setValue('');
-    expect(control?.valid).toBeFalsy();
-    
-    control?.setValue('John');
-    expect(control?.valid).toBeTruthy();
-  });
-
-  it('should require lastName', () => {
-    const control = component.registerForm.get('lastName');
-    control?.setValue('');
-    expect(control?.valid).toBeFalsy();
-    
-    control?.setValue('Doe');
-    expect(control?.valid).toBeTruthy();
   });
 
   it('should require valid email', () => {
@@ -62,12 +41,12 @@ describe('RegisterComponent', () => {
     expect(control?.valid).toBeTruthy();
   });
 
-  it('should require organizationName', () => {
-    const control = component.registerForm.get('organizationName');
-    control?.setValue('');
+  it('should require password with min length 6', () => {
+    const control = component.registerForm.get('password');
+    control?.setValue('12345');
     expect(control?.valid).toBeFalsy();
     
-    control?.setValue('Test Org');
+    control?.setValue('123456');
     expect(control?.valid).toBeTruthy();
   });
 

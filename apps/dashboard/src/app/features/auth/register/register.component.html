@@ -4,6 +4,9 @@
       <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
         Create your account
       </h2>
+      <p class="mt-2 text-center text-sm text-gray-600">
+        Your account will need to be approved by an administrator
+      </p>
     </div>
 
     <form class="mt-8 space-y-6" [formGroup]="registerForm" (ngSubmit)="onSubmit()">
@@ -14,34 +17,6 @@
       }
 
       <div class="space-y-4">
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label for="firstName" class="block text-sm font-medium text-gray-700">
-              First Name
-            </label>
-            <input
-              id="firstName"
-              type="text"
-              formControlName="firstName"
-              class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              placeholder="First name"
-            />
-          </div>
-
-          <div>
-            <label for="lastName" class="block text-sm font-medium text-gray-700">
-              Last Name
-            </label>
-            <input
-              id="lastName"
-              type="text"
-              formControlName="lastName"
-              class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              placeholder="Last name"
-            />
-          </div>
-        </div>
-
         <div>
           <label for="email" class="block text-sm font-medium text-gray-700">
             Email address
@@ -56,19 +31,6 @@
           @if (registerForm.get('email')?.invalid && registerForm.get('email')?.touched) {
             <p class="mt-1 text-sm text-red-600">Please enter a valid email</p>
           }
-        </div>
-
-        <div>
-          <label for="organizationName" class="block text-sm font-medium text-gray-700">
-            Organization Name
-          </label>
-          <input
-            id="organizationName"
-            type="text"
-            formControlName="organizationName"
-            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-            placeholder="Your company or team name"
-          />
         </div>
 
         <div>

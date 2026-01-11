@@ -1,11 +1,12 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ITask, TaskStatus, TaskCategory } from '@nbalkissoon-2bcc7cf4-788a-4438-89df-01042c760423/data';
+import { ConfirmModalComponent } from '../../../../shared/components/confirm-modal/confirm-modal.component';
 
 @Component({
   selector: 'app-task-card',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ConfirmModalComponent],
   templateUrl: './task-card.component.html',
 })
 export class TaskCardComponent {
@@ -14,7 +15,8 @@ export class TaskCardComponent {
   @Output() delete = new EventEmitter<string>();
   @Output() statusChange = new EventEmitter<{ id: string; status: TaskStatus }>();
 
-  TaskStatus = TaskStatus;
+  showDeleteModal = false;
+  statuses = Object.values(TaskStatus);
 
   getCategoryColor(category: TaskCategory): string {
     const colors: Record<TaskCategory, string> = {
@@ -33,7 +35,7 @@ export class TaskCardComponent {
   }
 
   getStatusOptions(): TaskStatus[] {
-    return [TaskStatus.TODO, TaskStatus.IN_PROGRESS, TaskStatus.COMPLETED];
+    return this.statuses;
   }
 
   onStatusChange(event: Event): void {
@@ -45,14 +47,16 @@ export class TaskCardComponent {
     this.edit.emit(this.task);
   }
 
-  onDelete(): void {
-    if (confirm('Are you sure you want to delete this task?')) {
-      this.delete.emit(this.task.id);
-    }
+  onDeleteClick(): void {
+    this.showDeleteModal = true;
   }
 
-  formatDate(date: Date | string | undefined): string {
-    if (!date) return '';
-    return new Date(date).toLocaleDateString();
+  onDeleteConfirm(): void {
+    this.delete.emit(this.task.id);
+    this.showDeleteModal = false;
+  }
+
+  onDeleteCancel(): void {
+    this.showDeleteModal = false;
   }
 }

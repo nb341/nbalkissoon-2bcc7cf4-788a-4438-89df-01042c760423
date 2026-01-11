@@ -1,4 +1,4 @@
-﻿import {
+import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
@@ -7,39 +7,50 @@
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { Role } from '@nbalkissoon-2bcc7cf4-788a-4438-89df-01042c760423/data';
 import { Organization } from './organization.entity';
+import { Role, UserStatus } from '@nbalkissoon-2bcc7cf4-788a-4438-89df-01042c760423/data';
 
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ unique: true, length: 255 })
+  @Column({ unique: true })
   email: string;
-
-  @Column({ name: 'first_name', length: 100 })
-  firstName: string;
-
-  @Column({ name: 'last_name', length: 100 })
-  lastName: string;
 
   @Column()
   password: string;
 
-  @Column({ type: 'enum', enum: Role, default: Role.VIEWER })
-  role: Role;
+  @Column({ nullable: true })
+  firstName: string;
 
-  @Column({ name: 'organization_id' })
-  organizationId: string;
+  @Column({ nullable: true })
+  lastName: string;
 
-  @ManyToOne(() => Organization)
-  @JoinColumn({ name: 'organization_id' })
+  @Column({
+    type: 'varchar',
+    enum: Role,
+    nullable: true,
+  })
+  role: Role | null;
+
+  @Column({
+    type: 'varchar',
+    enum: UserStatus,
+    default: UserStatus.PENDING,
+  })
+  status: UserStatus;
+
+  @Column({ nullable: true })
+  organizationId: string | null;
+
+  @ManyToOne(() => Organization, { nullable: true })
+  @JoinColumn({ name: 'organizationId' })
   organization: Organization;
 
-  @CreateDateColumn({ name: 'created_at' })
+  @CreateDateColumn()
   createdAt: Date;
 
-  @UpdateDateColumn({ name: 'updated_at' })
+  @UpdateDateColumn()
   updatedAt: Date;
 }

@@ -1,8 +1,10 @@
 <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-  <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-    <div class="flex flex-col sm:flex-row gap-4 flex-1">
-      <div class="flex-1 max-w-xs">
+  <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
+    <div class="flex flex-col sm:flex-row gap-4 flex-1 flex-wrap">
+      <div class="flex-1 min-w-[200px]">
+        <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Search</label>
         <input
+          id="search"
           type="text"
           [value]="filters.search || ''"
           (input)="onSearch($event)"
@@ -11,66 +13,86 @@
         />
       </div>
 
-      <select
-        [(ngModel)]="filters.status"
-        (ngModelChange)="onFilterChange()"
-        class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-      >
-        <option value="">All Statuses</option>
-        @for (status of statuses; track status) {
-          @if (status) {
-            <option [value]="status">{{ status | titlecase }}</option>
+      <div>
+        <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+        <select
+          id="status"
+          [(ngModel)]="filters.status"
+          (ngModelChange)="onFilterChange()"
+          class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        >
+          <option value="">All Statuses</option>
+          @for (status of statuses; track status) {
+            @if (status) {
+              <option [value]="status">{{ status | titlecase }}</option>
+            }
           }
-        }
-      </select>
+        </select>
+      </div>
 
-      <select
-        [(ngModel)]="filters.category"
-        (ngModelChange)="onFilterChange()"
-        class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-      >
-        <option value="">All Categories</option>
-        @for (category of categories; track category) {
-          @if (category) {
-            <option [value]="category">{{ category | titlecase }}</option>
+      <div>
+        <label for="category" class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+        <select
+          id="category"
+          [(ngModel)]="filters.category"
+          (ngModelChange)="onFilterChange()"
+          class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        >
+          <option value="">All Categories</option>
+          @for (category of categories; track category) {
+            @if (category) {
+              <option [value]="category">{{ category | titlecase }}</option>
+            }
           }
-        }
-      </select>
+        </select>
+      </div>
 
-      <select
-        [(ngModel)]="filters.sortBy"
-        (ngModelChange)="onFilterChange()"
-        class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-      >
-        <option value="">Sort By</option>
-        @for (option of sortOptions; track option.value) {
-          <option [value]="option.value">{{ option.label }}</option>
-        }
-      </select>
+      <div>
+        <label for="sortBy" class="block text-sm font-medium text-gray-700 mb-1">Sort By</label>
+        <select
+          id="sortBy"
+          [(ngModel)]="filters.sortBy"
+          (ngModelChange)="onFilterChange()"
+          class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        >
+          <option value="">Default</option>
+          @for (option of sortOptions; track option.value) {
+            <option [value]="option.value">{{ option.label }}</option>
+          }
+        </select>
+      </div>
 
-      <select
-        [(ngModel)]="filters.sortOrder"
-        (ngModelChange)="onFilterChange()"
-        class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-      >
-        <option value="">Order</option>
-        <option value="ASC">Ascending</option>
-        <option value="DESC">Descending</option>
-      </select>
+      <div>
+        <label for="sortOrder" class="block text-sm font-medium text-gray-700 mb-1">Order</label>
+        <select
+          id="sortOrder"
+          [(ngModel)]="filters.sortOrder"
+          (ngModelChange)="onFilterChange()"
+          class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        >
+          <option value="">Default</option>
+          <option value="ASC">Ascending</option>
+          <option value="DESC">Descending</option>
+        </select>
+      </div>
 
-      <button
-        (click)="clearFilters()"
-        class="px-3 py-2 text-sm text-gray-600 hover:text-gray-800"
-      >
-        Clear
-      </button>
+      <div class="flex items-end">
+        <button
+          (click)="clearFilters()"
+          class="px-3 py-2 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-md hover:bg-gray-50"
+        >
+          Clear
+        </button>
+      </div>
     </div>
 
-    <button
-      (click)="onCreate()"
-      class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 whitespace-nowrap"
-    >
-      + New Task
-    </button>
+    <div class="flex items-end">
+      <button
+        (click)="onCreate()"
+        class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 whitespace-nowrap"
+      >
+        + New Task
+      </button>
+    </div>
   </div>
 </div>

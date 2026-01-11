@@ -1,4 +1,4 @@
-﻿import { createReducer, on } from '@ngrx/store';
+import { createReducer, on } from '@ngrx/store';
 import { AuthActions } from './auth.actions';
 import { AuthState, initialAuthState } from './auth.state';
 

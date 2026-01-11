@@ -16,15 +16,13 @@ export class RegisterComponent {
   registerForm: FormGroup;
   loading$: Observable<boolean>;
   error$: Observable<string | null>;
+  registrationSuccess = false;
 
   constructor(private fb: FormBuilder, private store: Store) {
     this.registerForm = this.fb.group({
-      firstName: ['', [Validators.required]],
-      lastName: ['', [Validators.required]],
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: ['', [Validators.required]],
-      organizationName: ['', [Validators.required]],
     });
 
     this.loading$ = this.store.select(selectAuthLoading);
@@ -33,8 +31,8 @@ export class RegisterComponent {
 
   onSubmit(): void {
     if (this.registerForm.valid && this.passwordsMatch()) {
-      const { confirmPassword, ...registerData } = this.registerForm.value;
-      this.store.dispatch(AuthActions.register({ data: { ...registerData, role: 'owner' } }));
+      const { email, password } = this.registerForm.value;
+      this.store.dispatch(AuthActions.register({ data: { email, password } }));
     }
   }
 

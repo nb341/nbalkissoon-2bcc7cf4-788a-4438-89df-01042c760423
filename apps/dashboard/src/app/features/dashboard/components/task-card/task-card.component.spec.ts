@@ -45,18 +45,24 @@ describe('TaskCardComponent', () => {
     expect(editSpy).toHaveBeenCalledWith(mockTask);
   });
 
-  it('should emit delete event when confirmed', () => {
-    jest.spyOn(window, 'confirm').mockReturnValue(true);
-    const deleteSpy = jest.spyOn(component.delete, 'emit');
-    component.onDelete();
-    expect(deleteSpy).toHaveBeenCalledWith('task-123');
+  it('should open delete modal when delete is clicked', () => {
+    expect(component.showDeleteModal).toBe(false);
+    component.onDeleteClick();
+    expect(component.showDeleteModal).toBe(true);
   });
 
-  it('should not emit delete event when not confirmed', () => {
-    jest.spyOn(window, 'confirm').mockReturnValue(false);
+  it('should emit delete event when confirmed', () => {
     const deleteSpy = jest.spyOn(component.delete, 'emit');
-    component.onDelete();
-    expect(deleteSpy).not.toHaveBeenCalled();
+    component.showDeleteModal = true;
+    component.onDeleteConfirm();
+    expect(deleteSpy).toHaveBeenCalledWith('task-123');
+    expect(component.showDeleteModal).toBe(false);
+  });
+
+  it('should close modal when cancelled', () => {
+    component.showDeleteModal = true;
+    component.onDeleteCancel();
+    expect(component.showDeleteModal).toBe(false);
   });
 
   it('should return correct category color', () => {

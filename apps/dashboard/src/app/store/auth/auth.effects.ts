@@ -19,7 +19,7 @@ export class AuthEffects {
         this.authService.login(credentials).pipe(
           map((response) => AuthActions.loginSuccess({ response })),
           catchError((error) =>
-            of(AuthActions.loginFailure({ error: error.error?.message || 'Login failed' }))
+            of(AuthActions.loginFailure({ error: error.error?.message || error.error?.error || 'Login failed' }))
           )
         )
       )
@@ -30,7 +30,14 @@ export class AuthEffects {
     () =>
       this.actions$.pipe(
         ofType(AuthActions.loginSuccess),
-        tap(() => this.router.navigate(['/dashboard']))
+        tap(({ response }) => {
+          // Check if user is pending
+          if (response.user.status === 'pending') {
+            this.router.navigate(['/auth/pending']);
+          } else {
+            this.router.navigate(['/dashboard']);
+          }
+        })
       ),
     { dispatch: false }
   );
@@ -40,7 +47,7 @@ export class AuthEffects {
       ofType(AuthActions.register),
       exhaustMap(({ data }) =>
         this.authService.register(data).pipe(
-          map((response) => AuthActions.registerSuccess({ response })),
+          map((response) => AuthActions.registerSuccess({ message: response.message })),
           catchError((error) =>
             of(AuthActions.registerFailure({ error: error.error?.message || 'Registration failed' }))
           )
@@ -53,7 +60,7 @@ export class AuthEffects {
     () =>
       this.actions$.pipe(
         ofType(AuthActions.registerSuccess),
-        tap(() => this.router.navigate(['/auth/login']))
+        tap(() => this.router.navigate(['/auth/registration-submitted']))
       ),
     { dispatch: false }
   );

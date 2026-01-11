@@ -1,4 +1,4 @@
-﻿import { Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { APP_GUARD } from '@nestjs/core';
@@ -8,6 +8,8 @@ import { getDatabaseConfig } from '../config';
 import { AuthModule, JwtAuthGuard } from '../modules/auth';
 import { TasksModule } from '../modules/tasks';
 import { AuditLogModule } from '../modules/audit-log';
+import { AdminModule } from '../modules/admin';
+import { SeedModule } from '../modules/seed';
 
 @Module({
   imports: [
@@ -19,6 +21,8 @@ import { AuditLogModule } from '../modules/audit-log';
     AuthModule,
     TasksModule,
     AuditLogModule,
+    AdminModule,
+    SeedModule,
   ],
   controllers: [AppController],
   providers: [

@@ -1,7 +1,8 @@
-﻿import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { AuditLogService } from './audit-log.service';
 import { AuditFilterDto } from './dto';
 import { User } from '../../entities';
+import { ActiveUserGuard } from '../auth/guards/active-user.guard';
 import {
   Roles,
   Permissions,
@@ -12,7 +13,7 @@ import {
 import { Role, Permission } from '@nbalkissoon-2bcc7cf4-788a-4438-89df-01042c760423/data';
 
 @Controller('audit-log')
-@UseGuards(RolesGuard, PermissionsGuard)
+@UseGuards(ActiveUserGuard, RolesGuard, PermissionsGuard)
 @Roles(Role.OWNER, Role.ADMIN)
 @Permissions(Permission.AUDIT_VIEW)
 export class AuditLogController {

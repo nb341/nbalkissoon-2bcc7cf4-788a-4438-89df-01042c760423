@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
 import { AuthActions, selectUser } from '../../store/auth';
@@ -11,7 +12,8 @@ import {
   selectTaskStats,
   selectTasksPagination
 } from '../../store/tasks';
-import { LoginResponseDto, ITask, TaskFilterDto, CreateTaskDto, UpdateTaskDto, TaskStatus } from '@nbalkissoon-2bcc7cf4-788a-4438-89df-01042c760423/data';
+import { ITask, TaskFilterDto, CreateTaskDto, UpdateTaskDto, TaskStatus, Role } from '@nbalkissoon-2bcc7cf4-788a-4438-89df-01042c760423/data';
+import { AuthUser } from '../../store/auth/auth.state';
 import { TaskListComponent } from './components/task-list/task-list.component';
 import { TaskFiltersComponent } from './components/task-filters/task-filters.component';
 import { TaskModalComponent } from './components/task-modal/task-modal.component';
@@ -19,11 +21,11 @@ import { TaskModalComponent } from './components/task-modal/task-modal.component
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, TaskListComponent, TaskFiltersComponent, TaskModalComponent],
+  imports: [CommonModule, RouterLink, TaskListComponent, TaskFiltersComponent, TaskModalComponent],
   templateUrl: './dashboard.component.html',
 })
 export class DashboardComponent implements OnInit {
-  user$: Observable<LoginResponseDto['user'] | null>;
+  user$: Observable<AuthUser | null>;
   tasks$: Observable<ITask[]>;
   loading$: Observable<boolean>;
   error$: Observable<string | null>;
@@ -32,6 +34,8 @@ export class DashboardComponent implements OnInit {
 
   isModalOpen = false;
   selectedTask: ITask | null = null;
+
+  Role = Role;
 
   constructor(private store: Store) {
     this.user$ = this.store.select(selectUser);
@@ -89,5 +93,9 @@ export class DashboardComponent implements OnInit {
 
   logout(): void {
     this.store.dispatch(AuthActions.logout());
+  }
+
+  isManagement(user: AuthUser | null): boolean {
+    return user?.role === Role.OWNER || user?.role === Role.ADMIN;
   }
 }

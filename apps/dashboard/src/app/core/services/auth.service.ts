@@ -1,27 +1,48 @@
-﻿import { Injectable } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
-import { LoginDto, LoginResponseDto, RegisterDto, RegisterResponseDto } from '@nbalkissoon-2bcc7cf4-788a-4438-89df-01042c760423/data';
+import { environment } from '../../../environments/environment';
+import { AuthUser } from '../../store/auth/auth.state';
+
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
+export interface RegisterData {
+  email: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  accessToken: string;
+  refreshToken: string;
+  user: AuthUser;
+}
+
+export interface RegisterResponse {
+  message: string;
+}
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
-  private readonly apiUrl = 'http://localhost:3000/api/auth';
+  private readonly apiUrl = environment.apiUrl + '/auth';
   private readonly TOKEN_KEY = 'access_token';
   private readonly REFRESH_TOKEN_KEY = 'refresh_token';
   private readonly USER_KEY = 'user';
 
   constructor(private http: HttpClient) {}
 
-  login(credentials: LoginDto): Observable<LoginResponseDto> {
-    return this.http.post<LoginResponseDto>(this.apiUrl + '/login', credentials).pipe(
+  login(credentials: LoginCredentials): Observable<LoginResponse> {
+    return this.http.post<LoginResponse>(this.apiUrl + '/login', credentials).pipe(
       tap((response) => this.storeTokens(response))
     );
   }
 
-  register(data: RegisterDto): Observable<RegisterResponseDto> {
-    return this.http.post<RegisterResponseDto>(this.apiUrl + '/register', data);
+  register(data: RegisterData): Observable<RegisterResponse> {
+    return this.http.post<RegisterResponse>(this.apiUrl + '/register', data);
   }
 
   refreshToken(): Observable<{ accessToken: string }> {
@@ -41,7 +62,6 @@ export class AuthService {
     const token = this.getAccessToken();
     if (!token) return false;
     
-    // Check if token is expired
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
       return payload.exp * 1000 > Date.now();
@@ -58,12 +78,12 @@ export class AuthService {
     return localStorage.getItem(this.REFRESH_TOKEN_KEY);
   }
 
-  getUser(): LoginResponseDto['user'] | null {
+  getUser(): AuthUser | null {
     const user = localStorage.getItem(this.USER_KEY);
     return user ? JSON.parse(user) : null;
   }
 
-  private storeTokens(response: LoginResponseDto): void {
+  private storeTokens(response: LoginResponse): void {
     localStorage.setItem(this.TOKEN_KEY, response.accessToken);
     localStorage.setItem(this.REFRESH_TOKEN_KEY, response.refreshToken);
     localStorage.setItem(this.USER_KEY, JSON.stringify(response.user));

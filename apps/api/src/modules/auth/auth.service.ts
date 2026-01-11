@@ -1,73 +1,54 @@
-﻿import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException, ForbiddenException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { User, Organization } from '../../entities';
+import { User } from '../../entities';
 import { LoginDto, RegisterDto } from './dto';
-import { Role } from '@nbalkissoon-2bcc7cf4-788a-4438-89df-01042c760423/data';
+import { UserStatus } from '@nbalkissoon-2bcc7cf4-788a-4438-89df-01042c760423/data';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-    @InjectRepository(Organization)
-    private readonly organizationRepository: Repository<Organization>,
     private readonly jwtService: JwtService,
   ) {}
 
-  async register(registerDto: RegisterDto) {
+  async register(registerDto: RegisterDto): Promise<{ message: string }> {
+    const { email, password } = registerDto;
+
+    // Check if user already exists
     const existingUser = await this.userRepository.findOne({
-      where: { email: registerDto.email },
+      where: { email },
     });
 
     if (existingUser) {
-      throw new ConflictException('Email already exists');
+      throw new ConflictException('Email already registered');
     }
 
-    let organizationId = registerDto.organizationId;
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create new organization if name provided and no ID
-    if (!organizationId && registerDto.organizationName) {
-      const organization = this.organizationRepository.create({
-        name: registerDto.organizationName,
-      });
-      const savedOrg = await this.organizationRepository.save(organization);
-      organizationId = savedOrg.id;
-    }
-
-    if (!organizationId) {
-      throw new ConflictException('Organization ID or name is required');
-    }
-
-    const hashedPassword = await bcrypt.hash(registerDto.password, 10);
-
+    // Create user as PENDING with no role and no organization
     const user = this.userRepository.create({
-      email: registerDto.email,
+      email,
       password: hashedPassword,
-      firstName: registerDto.firstName,
-      lastName: registerDto.lastName,
-      role: registerDto.role || Role.VIEWER,
-      organizationId,
+      status: UserStatus.PENDING,
+      role: null,
+      organizationId: null,
     });
 
-    const savedUser = await this.userRepository.save(user);
+    await this.userRepository.save(user);
 
-    return {
-      id: savedUser.id,
-      email: savedUser.email,
-      firstName: savedUser.firstName,
-      lastName: savedUser.lastName,
-      role: savedUser.role,
-      organizationId: savedUser.organizationId,
-      createdAt: savedUser.createdAt,
-    };
+    return { message: 'Registration submitted. Please wait for admin approval.' };
   }
 
-  async login(loginDto: LoginDto) {
+  async login(loginDto: LoginDto): Promise<{ accessToken: string; refreshToken: string; user: Partial<User> }> {
+    const { email, password } = loginDto;
+
     const user = await this.userRepository.findOne({
-      where: { email: loginDto.email },
+      where: { email },
       relations: ['organization'],
     });
 
@@ -75,24 +56,27 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const isPasswordValid = await bcrypt.compare(loginDto.password, user.password);
+    const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const payload = {
-      sub: user.id,
-      email: user.email,
+    // Check user status
+    if (user.status === UserStatus.REJECTED) {
+      throw new ForbiddenException('Your account has been rejected');
+    }
+
+    const payload = { 
+      sub: user.id, 
+      email: user.email, 
       role: user.role,
+      status: user.status,
       organizationId: user.organizationId,
     };
 
-    const accessToken = this.jwtService.sign(payload);
-    const refreshToken = this.jwtService.sign(payload, {
-      secret: process.env.JWT_REFRESH_SECRET || 'dev-refresh-secret-change-in-production',
-      expiresIn: 604800,
-    });
+    const accessToken = this.jwtService.sign(payload, { expiresIn: 3600 });
+    const refreshToken = this.jwtService.sign(payload, { expiresIn: 604800 });
 
     return {
       accessToken,
@@ -103,6 +87,7 @@ export class AuthService {
         firstName: user.firstName,
         lastName: user.lastName,
         role: user.role,
+        status: user.status,
         organizationId: user.organizationId,
       },
     };
@@ -115,30 +100,28 @@ export class AuthService {
     });
   }
 
-  async refreshToken(refreshToken: string) {
+  async refreshToken(refreshToken: string): Promise<{ accessToken: string }> {
     try {
-      const payload = this.jwtService.verify(refreshToken, {
-        secret: process.env.JWT_REFRESH_SECRET || 'dev-refresh-secret-change-in-production',
-      });
-
+      const payload = this.jwtService.verify(refreshToken);
       const user = await this.userRepository.findOne({
         where: { id: payload.sub },
       });
 
       if (!user) {
-        throw new UnauthorizedException('User not found');
+        throw new UnauthorizedException('Invalid refresh token');
       }
 
-      const newPayload = {
-        sub: user.id,
-        email: user.email,
+      const newPayload = { 
+        sub: user.id, 
+        email: user.email, 
         role: user.role,
+        status: user.status,
         organizationId: user.organizationId,
       };
 
-      return {
-        accessToken: this.jwtService.sign(newPayload),
-      };
+      const accessToken = this.jwtService.sign(newPayload, { expiresIn: 3600 });
+
+      return { accessToken };
     } catch {
       throw new UnauthorizedException('Invalid refresh token');
     }

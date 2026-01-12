@@ -1,0 +1,7 @@
+{
+  "method": "GET",
+  "url": "{{baseUrl}}/admin/registrations",
+  "headers": {
+    "Authorization": "Bearer {{accessToken}}"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "method": "POST",
+  "url": "{{baseUrl}}/admin/registrations/{{userId}}/approve",
+  "headers": {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer {{accessToken}}"
+  },
+  "body": {
+    "organizationId": "{{organizationId}}",
+    "role": "viewer"
+  }
+}

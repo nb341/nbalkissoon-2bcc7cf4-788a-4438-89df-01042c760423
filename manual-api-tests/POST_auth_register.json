@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "url": "{{baseUrl}}/auth/register",
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "email": "new.user@example.com",
+    "password": "password123"
+  }
+}

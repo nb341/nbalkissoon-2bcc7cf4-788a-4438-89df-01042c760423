@@ -1,7 +1,7 @@
-import { Component, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TaskFilterDto, TaskStatus, TaskCategory } from '@nbalkissoon-2bcc7cf4-788a-4438-89df-01042c760423/data';
+import { TaskFilterDto, TaskStatus, TaskCategory, Role } from '@nbalkissoon-2bcc7cf4-788a-4438-89df-01042c760423/data';
 
 @Component({
   selector: 'app-task-filters',
@@ -10,6 +10,7 @@ import { TaskFilterDto, TaskStatus, TaskCategory } from '@nbalkissoon-2bcc7cf4-7
   templateUrl: './task-filters.component.html',
 })
 export class TaskFiltersComponent {
+  @Input() userRole: Role | null = null;
   @Output() filterChange = new EventEmitter<TaskFilterDto>();
   @Output() createTask = new EventEmitter<void>();
 
@@ -23,6 +24,8 @@ export class TaskFiltersComponent {
     { value: 'priority', label: 'Priority' },
     { value: 'title', label: 'Title' },
   ];
+
+  Role = Role;
 
   onFilterChange(): void {
     const cleanFilters: TaskFilterDto = {};
@@ -49,5 +52,9 @@ export class TaskFiltersComponent {
 
   onCreate(): void {
     this.createTask.emit();
+  }
+
+  canCreate(): boolean {
+    return this.userRole === Role.OWNER || this.userRole === Role.ADMIN;
   }
 }

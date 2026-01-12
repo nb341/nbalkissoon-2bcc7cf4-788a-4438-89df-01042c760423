@@ -1,0 +1,11 @@
+{
+  "method": "PUT",
+  "url": "{{baseUrl}}/tasks/{{taskId}}/reorder",
+  "headers": {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer {{accessToken}}"
+  },
+  "body": {
+    "priority": 2
+  }
+}

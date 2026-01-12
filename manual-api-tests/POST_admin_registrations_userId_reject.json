@@ -1,0 +1,7 @@
+{
+  "method": "POST",
+  "url": "{{baseUrl}}/admin/registrations/{{userId}}/reject",
+  "headers": {
+    "Authorization": "Bearer {{accessToken}}"
+  }
+}

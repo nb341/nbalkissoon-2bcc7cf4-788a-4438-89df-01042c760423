@@ -1,0 +1,7 @@
+{
+  "method": "DELETE",
+  "url": "{{baseUrl}}/tasks/{{taskId}}",
+  "headers": {
+    "Authorization": "Bearer {{accessToken}}"
+  }
+}

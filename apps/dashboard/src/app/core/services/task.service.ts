@@ -8,12 +8,13 @@ import {
   TaskFilterDto,
   PaginatedResponseDto 
 } from '@nbalkissoon-2bcc7cf4-788a-4438-89df-01042c760423/data';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class TaskService {
-  private readonly apiUrl = 'http://localhost:3000/api/tasks';
+  private readonly apiUrl = environment.apiUrl + '/tasks';
 
   constructor(private http: HttpClient) {}
 

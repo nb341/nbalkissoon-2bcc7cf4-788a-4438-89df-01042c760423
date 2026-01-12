@@ -20,7 +20,7 @@ interface UserOption {
 export class TaskModalComponent implements OnInit, OnChanges {
   @Input() task: ITask | null = null;
   @Input() isOpen = false;
-  @Input() canAssign = false;
+  @Input() readOnly = false;
   @Output() close = new EventEmitter<void>();
   @Output() save = new EventEmitter<CreateTaskDto | UpdateTaskDto>();
 
@@ -28,6 +28,7 @@ export class TaskModalComponent implements OnInit, OnChanges {
   statuses = Object.values(TaskStatus);
   categories = Object.values(TaskCategory);
   users: UserOption[] = [];
+  loadingUsers = false;
 
   constructor(
     private fb: FormBuilder,
@@ -36,22 +37,26 @@ export class TaskModalComponent implements OnInit, OnChanges {
 
   ngOnInit(): void {
     this.initForm();
-    this.loadUsers();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['isOpen'] && this.isOpen) {
       this.initForm();
+      this.loadUsers();
     }
   }
 
   loadUsers(): void {
+    this.loadingUsers = true;
     this.adminService.getUsers().subscribe({
       next: (users) => {
         this.users = users;
+        this.loadingUsers = false;
       },
-      error: () => {
+      error: (err) => {
+        console.error('Failed to load users:', err);
         this.users = [];
+        this.loadingUsers = false;
       },
     });
   }
@@ -71,6 +76,13 @@ export class TaskModalComponent implements OnInit, OnChanges {
   formatDateForInput(date: Date | string): string {
     const d = new Date(date);
     return d.toISOString().split('T')[0];
+  }
+
+  getUserDisplayName(user: UserOption): string {
+    if (user.firstName && user.lastName) {
+      return `${user.firstName} ${user.lastName} (${user.email})`;
+    }
+    return user.email;
   }
 
   onSubmit(): void {
@@ -101,5 +113,31 @@ export class TaskModalComponent implements OnInit, OnChanges {
 
   get isEditMode(): boolean {
     return !!this.task;
+  }
+
+  getStatusColor(status: TaskStatus): string {
+    const colors: Record<TaskStatus, string> = {
+      [TaskStatus.TODO]: 'bg-yellow-100 text-yellow-800',
+      [TaskStatus.IN_PROGRESS]: 'bg-blue-100 text-blue-800',
+      [TaskStatus.COMPLETED]: 'bg-green-100 text-green-800',
+      [TaskStatus.ARCHIVED]: 'bg-gray-100 text-gray-800',
+    };
+    return colors[status] || colors[TaskStatus.TODO];
+  }
+
+  getCategoryColor(category: TaskCategory): string {
+    const colors: Record<TaskCategory, string> = {
+      [TaskCategory.WORK]: 'bg-blue-100 text-blue-800',
+      [TaskCategory.PERSONAL]: 'bg-green-100 text-green-800',
+      [TaskCategory.URGENT]: 'bg-red-100 text-red-800',
+      [TaskCategory.OTHER]: 'bg-gray-100 text-gray-800',
+    };
+    return colors[category] || colors[TaskCategory.OTHER];
+  }
+
+  getPriorityColor(priority: number): string {
+    if (priority >= 8) return 'bg-red-500';
+    if (priority >= 5) return 'bg-yellow-500';
+    return 'bg-green-500';
   }
 }

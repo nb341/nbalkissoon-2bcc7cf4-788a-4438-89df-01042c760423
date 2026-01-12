@@ -1,120 +1,215 @@
 @if (isOpen) {
-  <div 
+  <div
     class="modal-backdrop fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
     (click)="onBackdropClick($event)"
   >
     <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
       <div class="px-6 py-4 border-b border-gray-200">
         <h2 class="text-xl font-semibold text-gray-900">
-          {{ isEditMode ? 'Edit Task' : 'Create New Task' }}
+          @if (readOnly) {
+            Task Details
+          } @else {
+            {{ isEditMode ? 'Edit Task' : 'Create New Task' }}
+          }
         </h2>
       </div>
 
-      <form [formGroup]="taskForm" (ngSubmit)="onSubmit()" class="px-6 py-4 space-y-4">
-        <div>
-          <label for="title" class="block text-sm font-medium text-gray-700 mb-1">Title *</label>
-          <input
-            id="title"
-            type="text"
-            formControlName="title"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            placeholder="Enter task title"
-          />
-          @if (taskForm.get('title')?.invalid && taskForm.get('title')?.touched) {
-            <p class="mt-1 text-sm text-red-600">Title is required (min 3 characters)</p>
+      @if (readOnly && task) {
+        <!-- Read-only view for Viewers -->
+        <div class="px-6 py-4 space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-500 mb-1">Title</label>
+            <p class="text-gray-900 font-medium">{{ task.title }}</p>
+          </div>
+
+          @if (task.description) {
+            <div>
+              <label class="block text-sm font-medium text-gray-500 mb-1">Description</label>
+              <p class="text-gray-700 whitespace-pre-wrap">{{ task.description }}</p>
+            </div>
           }
-        </div>
 
-        <div>
-          <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-          <textarea
-            id="description"
-            formControlName="description"
-            rows="3"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            placeholder="Enter task description"
-          ></textarea>
-        </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-500 mb-1">Status</label>
+              <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full {{ getStatusColor(task.status) }}">
+                {{ task.status | titlecase }}
+              </span>
+            </div>
 
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-            <select
-              id="status"
-              formControlName="status"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              @for (status of statuses; track status) {
-                <option [value]="status">{{ status | titlecase }}</option>
-              }
-            </select>
+            <div>
+              <label class="block text-sm font-medium text-gray-500 mb-1">Category</label>
+              <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full {{ getCategoryColor(task.category) }}">
+                {{ task.category | titlecase }}
+              </span>
+            </div>
           </div>
 
-          <div>
-            <label for="category" class="block text-sm font-medium text-gray-700 mb-1">Category</label>
-            <select
-              id="category"
-              formControlName="category"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              @for (category of categories; track category) {
-                <option [value]="category">{{ category | titlecase }}</option>
-              }
-            </select>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-500 mb-1">Priority</label>
+              <div class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full {{ getPriorityColor(task.priority) }}"></span>
+                <span class="text-gray-700">{{ task.priority }}/10</span>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-500 mb-1">Due Date</label>
+              <p class="text-gray-700">{{ task.dueDate ? (task.dueDate | date:'mediumDate') : 'No due date' }}</p>
+            </div>
+          </div>
+
+          @if (task.assignedTo) {
+            <div>
+              <label class="block text-sm font-medium text-gray-500 mb-1">Assigned To</label>
+              <p class="text-gray-700">{{ task.assignedTo.firstName }} {{ task.assignedTo.lastName }}</p>
+            </div>
+          }
+
+          @if (task.createdBy) {
+            <div>
+              <label class="block text-sm font-medium text-gray-500 mb-1">Created By</label>
+              <p class="text-gray-700">{{ task.createdBy.firstName }} {{ task.createdBy.lastName }}</p>
+            </div>
+          }
+
+          <div class="grid grid-cols-2 gap-4 pt-2 border-t border-gray-100">
+            <div>
+              <label class="block text-xs font-medium text-gray-400 mb-1">Created</label>
+              <p class="text-sm text-gray-500">{{ task.createdAt | date:'medium' }}</p>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-400 mb-1">Last Updated</label>
+              <p class="text-sm text-gray-500">{{ task.updatedAt | date:'medium' }}</p>
+            </div>
+          </div>
+
+          <div class="flex justify-end pt-4 border-t border-gray-200">
+            <button
+              type="button"
+              (click)="onClose()"
+              class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
+            >Close</button>
           </div>
         </div>
-
-        <div class="grid grid-cols-2 gap-4">
+      } @else {
+        <!-- Editable form for Owner/Admin -->
+        <form [formGroup]="taskForm" (ngSubmit)="onSubmit()" class="px-6 py-4 space-y-4">
           <div>
-            <label for="priority" class="block text-sm font-medium text-gray-700 mb-1">Priority (0-10)</label>
+            <label for="title" class="block text-sm font-medium text-gray-700 mb-1">Title *</label>
             <input
-              id="priority"
-              type="number"
-              formControlName="priority"
-              min="0"
-              max="10"
+              id="title"
+              type="text"
+              formControlName="title"
               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              placeholder="Enter task title"
             />
-          </div>
-
-          <div>
-            <label for="dueDate" class="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
-            <input
-              id="dueDate"
-              type="date"
-              formControlName="dueDate"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-          </div>
-        </div>
-
-        <div>
-          <label for="assignedToId" class="block text-sm font-medium text-gray-700 mb-1">Assign To</label>
-          <select
-            id="assignedToId"
-            formControlName="assignedToId"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          >
-            <option value="">Unassigned</option>
-            @for (user of users; track user.id) {
-              <option [value]="user.id">{{ user.firstName ? user.firstName + ' ' + user.lastName : user.email }}</option>
+            @if (taskForm.get('title')?.invalid && taskForm.get('title')?.touched) {
+              <p class="mt-1 text-sm text-red-600">Title is required (min 3 characters)</p>
             }
-          </select>
-        </div>
+          </div>
 
-        <div class="flex justify-end gap-3 pt-4 border-t border-gray-200">
-          <button
-            type="button"
-            (click)="onClose()"
-            class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
-          >Cancel</button>
-          <button
-            type="submit"
-            [disabled]="taskForm.invalid"
-            class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >{{ isEditMode ? 'Update' : 'Create' }}</button>
-        </div>
-      </form>
+          <div>
+            <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <textarea
+              id="description"
+              formControlName="description"
+              rows="3"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              placeholder="Enter task description"
+            ></textarea>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+              <select
+                id="status"
+                formControlName="status"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                @for (status of statuses; track status) {
+                  <option [value]="status">{{ status | titlecase }}</option>
+                }
+              </select>
+            </div>
+
+            <div>
+              <label for="category" class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+              <select
+                id="category"
+                formControlName="category"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                @for (category of categories; track category) {
+                  <option [value]="category">{{ category | titlecase }}</option>
+                }
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label for="priority" class="block text-sm font-medium text-gray-700 mb-1">Priority (0-10)</label>
+              <input
+                id="priority"
+                type="number"
+                formControlName="priority"
+                min="0"
+                max="10"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+
+            <div>
+              <label for="dueDate" class="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+              <input
+                id="dueDate"
+                type="date"
+                formControlName="dueDate"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label for="assignedToId" class="block text-sm font-medium text-gray-700 mb-1">Assign To</label>
+            @if (loadingUsers) {
+              <div class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500">
+                Loading users...
+              </div>
+            } @else {
+              <select
+                id="assignedToId"
+                formControlName="assignedToId"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="">Unassigned</option>
+                @for (user of users; track user.id) {
+                  <option [value]="user.id">{{ getUserDisplayName(user) }}</option>
+                }
+              </select>
+            }
+            @if (users.length === 0 && !loadingUsers) {
+              <p class="mt-1 text-sm text-gray-500">No users available to assign</p>
+            }
+          </div>
+
+          <div class="flex justify-end gap-3 pt-4 border-t border-gray-200">
+            <button
+              type="button"
+              (click)="onClose()"
+              class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+            >Cancel</button>
+            <button
+              type="submit"
+              [disabled]="taskForm.invalid"
+              class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >{{ isEditMode ? 'Update' : 'Create' }}</button>
+          </div>
+        </form>
+      }
     </div>
   </div>
 }

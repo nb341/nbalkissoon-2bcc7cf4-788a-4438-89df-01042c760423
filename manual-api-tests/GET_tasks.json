@@ -1,0 +1,7 @@
+{
+  "method": "GET",
+  "url": "{{baseUrl}}/tasks?status=todo&category=work&search=Prepare&page=1&limit=10",
+  "headers": {
+    "Authorization": "Bearer {{accessToken}}"
+  }
+}

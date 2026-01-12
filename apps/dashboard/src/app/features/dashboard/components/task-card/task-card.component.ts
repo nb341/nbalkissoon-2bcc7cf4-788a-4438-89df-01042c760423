@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ITask, TaskStatus, TaskCategory } from '@nbalkissoon-2bcc7cf4-788a-4438-89df-01042c760423/data';
+import { ITask, TaskStatus, TaskCategory, Role } from '@nbalkissoon-2bcc7cf4-788a-4438-89df-01042c760423/data';
 import { ConfirmModalComponent } from '../../../../shared/components/confirm-modal/confirm-modal.component';
 
 @Component({
@@ -11,12 +11,16 @@ import { ConfirmModalComponent } from '../../../../shared/components/confirm-mod
 })
 export class TaskCardComponent {
   @Input() task!: ITask;
+  @Input() userRole: Role | null = null;
+  @Input() currentUserId: string | null = null;
   @Output() edit = new EventEmitter<ITask>();
   @Output() delete = new EventEmitter<string>();
   @Output() statusChange = new EventEmitter<{ id: string; status: TaskStatus }>();
+  @Output() view = new EventEmitter<ITask>();
 
   showDeleteModal = false;
   statuses = Object.values(TaskStatus);
+  Role = Role;
 
   getCategoryColor(category: TaskCategory): string {
     const colors: Record<TaskCategory, string> = {
@@ -26,6 +30,16 @@ export class TaskCardComponent {
       [TaskCategory.OTHER]: 'bg-gray-100 text-gray-800',
     };
     return colors[category] || colors[TaskCategory.OTHER];
+  }
+
+  getStatusColor(status: TaskStatus): string {
+    const colors: Record<TaskStatus, string> = {
+      [TaskStatus.TODO]: 'bg-yellow-100 text-yellow-800',
+      [TaskStatus.IN_PROGRESS]: 'bg-blue-100 text-blue-800',
+      [TaskStatus.COMPLETED]: 'bg-green-100 text-green-800',
+      [TaskStatus.ARCHIVED]: 'bg-gray-100 text-gray-800',
+    };
+    return colors[status] || colors[TaskStatus.TODO];
   }
 
   getPriorityColor(priority: number): string {
@@ -58,5 +72,34 @@ export class TaskCardComponent {
 
   onDeleteCancel(): void {
     this.showDeleteModal = false;
+  }
+
+  canModify(): boolean {
+    return this.userRole === Role.OWNER || this.userRole === Role.ADMIN;
+  }
+
+  onView(): void {
+    this.view.emit(this.task);
+  }
+
+  isCreatedByMe(): boolean {
+    return this.task.createdById === this.currentUserId;
+  }
+
+  isAssignedToMe(): boolean {
+    return this.task.assignedToId === this.currentUserId;
+  }
+
+  getOwnershipLabel(): string {
+    if (this.isCreatedByMe() && this.isAssignedToMe()) {
+      return 'Created by you & assigned to you';
+    }
+    if (this.isCreatedByMe()) {
+      return 'Created by you';
+    }
+    if (this.isAssignedToMe()) {
+      return 'Assigned to you';
+    }
+    return '';
   }
 }

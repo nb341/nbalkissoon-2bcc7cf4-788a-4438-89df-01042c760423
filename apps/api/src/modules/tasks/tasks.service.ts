@@ -180,7 +180,12 @@ export class TasksService {
       return true;
     }
 
-    // Admin and Viewer: can only view if creator or assignee
+    // Admin can view all tasks in org
+    if (user.role === Role.ADMIN) {
+      return true;
+    }
+
+    // Viewer: can only view if creator or assignee
     return task.createdById === user.id || task.assignedToId === user.id;
   }
 

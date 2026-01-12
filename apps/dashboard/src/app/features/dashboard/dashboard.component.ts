@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { AuthActions, selectUser } from '../../store/auth';
 import { 
   TasksActions, 
@@ -26,6 +27,8 @@ import { TaskModalComponent } from './components/task-modal/task-modal.component
 })
 export class DashboardComponent implements OnInit {
   user$: Observable<AuthUser | null>;
+  userRole$: Observable<Role | null>;
+  userId$: Observable<string | null>;
   tasks$: Observable<ITask[]>;
   loading$: Observable<boolean>;
   error$: Observable<string | null>;
@@ -33,12 +36,15 @@ export class DashboardComponent implements OnInit {
   pagination$: Observable<{ total: number; page: number; limit: number; totalPages: number }>;
 
   isModalOpen = false;
+  isModalReadOnly = false;
   selectedTask: ITask | null = null;
 
   Role = Role;
 
   constructor(private store: Store) {
     this.user$ = this.store.select(selectUser);
+    this.userRole$ = this.user$.pipe(map(user => user?.role as Role | null));
+    this.userId$ = this.user$.pipe(map(user => user?.id || null));
     this.tasks$ = this.store.select(selectAllTasks);
     this.loading$ = this.store.select(selectTasksLoading);
     this.error$ = this.store.select(selectTasksError);
@@ -57,11 +63,19 @@ export class DashboardComponent implements OnInit {
 
   onCreateTask(): void {
     this.selectedTask = null;
+    this.isModalReadOnly = false;
     this.isModalOpen = true;
   }
 
   onEditTask(task: ITask): void {
     this.selectedTask = task;
+    this.isModalReadOnly = false;
+    this.isModalOpen = true;
+  }
+
+  onViewTask(task: ITask): void {
+    this.selectedTask = task;
+    this.isModalReadOnly = true;
     this.isModalOpen = true;
   }
 
@@ -79,6 +93,7 @@ export class DashboardComponent implements OnInit {
 
   onModalClose(): void {
     this.isModalOpen = false;
+    this.isModalReadOnly = false;
     this.selectedTask = null;
   }
 
@@ -97,5 +112,9 @@ export class DashboardComponent implements OnInit {
 
   isManagement(user: AuthUser | null): boolean {
     return user?.role === Role.OWNER || user?.role === Role.ADMIN;
+  }
+
+  isViewer(user: AuthUser | null): boolean {
+    return user?.role === Role.VIEWER;
   }
 }

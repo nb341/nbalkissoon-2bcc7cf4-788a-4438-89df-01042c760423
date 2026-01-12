@@ -1,0 +1,11 @@
+{
+  "method": "POST",
+  "url": "{{baseUrl}}/auth/login",
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "email": "admin@system.com",
+    "password": "password123"
+  }
+}

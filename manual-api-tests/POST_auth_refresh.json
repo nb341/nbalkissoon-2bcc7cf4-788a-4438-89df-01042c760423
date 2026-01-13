@@ -1,0 +1,10 @@
+{
+  "method": "POST",
+  "url": "{{baseUrl}}/auth/refresh",
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "refreshToken": "{{refreshToken}}"
+  }
+}

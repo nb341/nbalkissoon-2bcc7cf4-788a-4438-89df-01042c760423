@@ -1,0 +1,15 @@
+{
+  "method": "POST",
+  "url": "{{baseUrl}}/tasks",
+  "headers": {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer {{accessToken}}"
+  },
+  "body": {
+    "title": "Prepare onboarding",
+    "description": "Set up access and tools",
+    "category": "work",
+    "priority": 3,
+    "assignedToId": "{{assignedToId}}"
+  }
+}

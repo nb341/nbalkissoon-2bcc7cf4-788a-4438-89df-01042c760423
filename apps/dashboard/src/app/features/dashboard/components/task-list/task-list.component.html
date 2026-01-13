@@ -1,0 +1,56 @@
+<div class="space-y-4">
+  @if (loading) {
+    <div class="flex justify-center py-8">
+      <svg class="animate-spin h-8 w-8 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+    </div>
+  } @else if (tasks.length === 0) {
+    <div class="text-center py-12 bg-white rounded-lg border border-gray-200">
+      <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+      </svg>
+      <h3 class="mt-2 text-sm font-medium text-gray-900">No tasks</h3>
+      <p class="mt-1 text-sm text-gray-500">
+        @if (userRole === Role.VIEWER) {
+          No tasks assigned to you yet.
+        } @else {
+          Get started by creating a new task.
+        }
+      </p>
+    </div>
+  } @else {
+    @if (canReorder()) {
+      <div cdkDropList (cdkDropListDropped)="onDrop($event)" class="space-y-4">
+        @for (task of tasks; track trackByTaskId($index, task)) {
+          <div cdkDrag class="cursor-move">
+            <app-task-card
+              [task]="task"
+              [userRole]="userRole"
+              [currentUserId]="currentUserId"
+              (edit)="onEdit($event)"
+              (delete)="onDelete($event)"
+              (statusChange)="onStatusChange($event)"
+              (view)="onView($event)"
+            ></app-task-card>
+          </div>
+        }
+      </div>
+    } @else {
+      <div class="space-y-4">
+        @for (task of tasks; track trackByTaskId($index, task)) {
+          <app-task-card
+            [task]="task"
+            [userRole]="userRole"
+            [currentUserId]="currentUserId"
+            (edit)="onEdit($event)"
+            (delete)="onDelete($event)"
+            (statusChange)="onStatusChange($event)"
+            (view)="onView($event)"
+          ></app-task-card>
+        }
+      </div>
+    }
+  }
+</div>

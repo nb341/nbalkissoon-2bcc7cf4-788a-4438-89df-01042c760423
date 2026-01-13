@@ -1,0 +1,12 @@
+{
+  "method": "PUT",
+  "url": "{{baseUrl}}/tasks/{{taskId}}",
+  "headers": {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer {{accessToken}}"
+  },
+  "body": {
+    "status": "in_progress",
+    "priority": 5
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "method": "GET",
+  "url": "{{baseUrl}}/audit-log?action=UPDATE&page=1&limit=10",
+  "headers": {
+    "Authorization": "Bearer {{accessToken}}"
+  }
+}

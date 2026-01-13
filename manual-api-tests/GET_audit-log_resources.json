@@ -1,0 +1,7 @@
+{
+  "method": "GET",
+  "url": "{{baseUrl}}/audit-log/resources",
+  "headers": {
+    "Authorization": "Bearer {{accessToken}}"
+  }
+}

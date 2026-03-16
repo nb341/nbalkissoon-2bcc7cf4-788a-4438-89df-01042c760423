@@ -8,6 +8,7 @@ export interface IUser {
   password?: string;
   role: Role;
   organizationId: string;
+  roleTemplateId?: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -19,6 +20,7 @@ export interface IUserResponse {
   lastName: string;
   role: Role;
   organizationId: string;
+  roleTemplateId?: string | null;
   createdAt: Date;
   updatedAt: Date;
 }

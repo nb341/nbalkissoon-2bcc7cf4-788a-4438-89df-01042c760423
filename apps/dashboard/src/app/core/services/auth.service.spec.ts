@@ -8,7 +8,7 @@ describe('AuthService', () => {
 
   const mockLoginResponse = {
     accessToken: 'mock-access-token',
-    refreshToken: 'mock-refresh-token',
+    csrfToken: 'mock-csrf-token',
     user: {
       id: 'user-123',
       email: 'test@test.com',
@@ -42,7 +42,7 @@ describe('AuthService', () => {
       service.login(credentials).subscribe((response) => {
         expect(response).toEqual(mockLoginResponse);
         expect(localStorage.getItem('access_token')).toBe('mock-access-token');
-        expect(localStorage.getItem('refresh_token')).toBe('mock-refresh-token');
+        expect(localStorage.getItem('csrf_token')).toBe('mock-csrf-token');
       });
 
       const req = httpMock.expectOne('http://localhost:3000/api/auth/login');
@@ -85,13 +85,16 @@ describe('AuthService', () => {
   describe('logout', () => {
     it('should clear tokens from localStorage', () => {
       localStorage.setItem('access_token', 'test-token');
-      localStorage.setItem('refresh_token', 'test-refresh');
+      localStorage.setItem('csrf_token', 'test-csrf');
       localStorage.setItem('user', JSON.stringify({ id: '123' }));
 
-      service.logout();
+      service.logout().subscribe();
+      const req = httpMock.expectOne('http://localhost:3000/api/auth/logout');
+      expect(req.request.method).toBe('POST');
+      req.flush({});
 
       expect(localStorage.getItem('access_token')).toBeNull();
-      expect(localStorage.getItem('refresh_token')).toBeNull();
+      expect(localStorage.getItem('csrf_token')).toBeNull();
       expect(localStorage.getItem('user')).toBeNull();
     });
   });

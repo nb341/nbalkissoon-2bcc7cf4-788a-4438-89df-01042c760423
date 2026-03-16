@@ -8,6 +8,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { Organization } from './organization.entity';
+import { RoleTemplate } from './role-template.entity';
 import { Role, UserStatus } from '@nbalkissoon-2bcc7cf4-788a-4438-89df-01042c760423/data';
 
 @Entity('users')
@@ -47,6 +48,13 @@ export class User {
   @ManyToOne(() => Organization, { nullable: true })
   @JoinColumn({ name: 'organizationId' })
   organization: Organization;
+
+  @Column({ name: 'role_template_id', nullable: true })
+  roleTemplateId: string | null;
+
+  @ManyToOne(() => RoleTemplate, { nullable: true })
+  @JoinColumn({ name: 'role_template_id' })
+  roleTemplate: RoleTemplate | null;
 
   @CreateDateColumn()
   createdAt: Date;

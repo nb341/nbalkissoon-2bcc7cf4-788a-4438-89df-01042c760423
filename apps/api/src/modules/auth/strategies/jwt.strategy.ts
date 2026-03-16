@@ -10,6 +10,7 @@ export interface JwtPayload {
   email: string;
   role: string;
   organizationId: string;
+  roleTemplateId?: string | null;
 }
 
 @Injectable()
@@ -28,7 +29,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   async validate(payload: JwtPayload): Promise<User> {
     const user = await this.userRepository.findOne({
       where: { id: payload.sub },
-      relations: ['organization'],
+      relations: ['organization', 'roleTemplate'],
     });
 
     if (!user) {

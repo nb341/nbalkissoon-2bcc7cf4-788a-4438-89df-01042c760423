@@ -68,11 +68,17 @@ export class AuthEffects {
   logout$ = createEffect(() =>
     this.actions$.pipe(
       ofType(AuthActions.logout),
-      tap(() => {
-        this.authService.logout();
-        this.router.navigate(['/auth/login']);
-      }),
-      map(() => AuthActions.logoutComplete())
+      exhaustMap(() =>
+        this.authService.logout().pipe(
+          tap(() => this.router.navigate(['/auth/login'])),
+          map(() => AuthActions.logoutComplete()),
+          catchError(() => {
+            this.authService.clearSession();
+            this.router.navigate(['/auth/login']);
+            return of(AuthActions.logoutComplete());
+          })
+        )
+      )
     )
   );
 

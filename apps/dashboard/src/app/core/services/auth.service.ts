@@ -16,7 +16,7 @@ export interface RegisterData {
 
 export interface LoginResponse {
   accessToken: string;
-  refreshToken: string;
+  csrfToken: string;
   user: AuthUser;
 }
 
@@ -30,13 +30,13 @@ export interface RegisterResponse {
 export class AuthService {
   private readonly apiUrl = environment.apiUrl + '/auth';
   private readonly TOKEN_KEY = 'access_token';
-  private readonly REFRESH_TOKEN_KEY = 'refresh_token';
+  private readonly CSRF_TOKEN_KEY = 'csrf_token';
   private readonly USER_KEY = 'user';
 
   constructor(private http: HttpClient) {}
 
   login(credentials: LoginCredentials): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(this.apiUrl + '/login', credentials).pipe(
+    return this.http.post<LoginResponse>(this.apiUrl + '/login', credentials, { withCredentials: true }).pipe(
       tap((response) => this.storeTokens(response))
     );
   }
@@ -46,15 +46,33 @@ export class AuthService {
   }
 
   refreshToken(): Observable<{ accessToken: string }> {
-    const refreshToken = this.getRefreshToken();
-    return this.http.post<{ accessToken: string }>(this.apiUrl + '/refresh', { refreshToken }).pipe(
-      tap((response) => this.setAccessToken(response.accessToken))
+    const csrfToken = this.getCsrfToken();
+    return this.http.post<{ accessToken: string; csrfToken: string }>(
+      this.apiUrl + '/refresh',
+      {},
+      {
+        withCredentials: true,
+        headers: csrfToken ? { 'X-CSRF-Token': csrfToken } : {},
+      },
+    ).pipe(
+      tap((response) => {
+        this.setAccessToken(response.accessToken);
+        this.setCsrfToken(response.csrfToken);
+      })
     );
   }
 
-  logout(): void {
+  logout(): Observable<void> {
+    return this.http.post<void>(this.apiUrl + '/logout', {}, { withCredentials: true }).pipe(
+      tap(() => {
+        this.clearSession();
+      }),
+    );
+  }
+
+  clearSession(): void {
     localStorage.removeItem(this.TOKEN_KEY);
-    localStorage.removeItem(this.REFRESH_TOKEN_KEY);
+    localStorage.removeItem(this.CSRF_TOKEN_KEY);
     localStorage.removeItem(this.USER_KEY);
   }
 
@@ -74,10 +92,6 @@ export class AuthService {
     return localStorage.getItem(this.TOKEN_KEY);
   }
 
-  getRefreshToken(): string | null {
-    return localStorage.getItem(this.REFRESH_TOKEN_KEY);
-  }
-
   getUser(): AuthUser | null {
     const user = localStorage.getItem(this.USER_KEY);
     return user ? JSON.parse(user) : null;
@@ -85,11 +99,27 @@ export class AuthService {
 
   private storeTokens(response: LoginResponse): void {
     localStorage.setItem(this.TOKEN_KEY, response.accessToken);
-    localStorage.setItem(this.REFRESH_TOKEN_KEY, response.refreshToken);
+    localStorage.setItem(this.CSRF_TOKEN_KEY, response.csrfToken);
     localStorage.setItem(this.USER_KEY, JSON.stringify(response.user));
   }
 
   private setAccessToken(token: string): void {
     localStorage.setItem(this.TOKEN_KEY, token);
+  }
+
+  private setCsrfToken(token: string): void {
+    localStorage.setItem(this.CSRF_TOKEN_KEY, token);
+  }
+
+  private getCsrfToken(): string | null {
+    return localStorage.getItem(this.CSRF_TOKEN_KEY) || this.getCookieValue('csrf_token');
+  }
+
+  private getCookieValue(name: string): string | null {
+    if (typeof document === 'undefined') {
+      return null;
+    }
+    const match = document.cookie.match(new RegExp('(^|;\\s*)' + name + '=([^;]*)'));
+    return match ? decodeURIComponent(match[2]) : null;
   }
 }

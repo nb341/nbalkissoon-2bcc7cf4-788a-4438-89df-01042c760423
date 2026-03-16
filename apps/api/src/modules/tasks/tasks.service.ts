@@ -4,6 +4,7 @@ import { Repository, SelectQueryBuilder } from 'typeorm';
 import { Task, User, AuditLog } from '../../entities';
 import { CreateTaskDto, UpdateTaskDto, TaskFilterDto } from './dto';
 import { Role, TaskStatus, TaskCategory } from '@nbalkissoon-2bcc7cf4-788a-4438-89df-01042c760423/data';
+import { OrganizationScopeService } from './organization-scope.service';
 
 @Injectable()
 export class TasksService {
@@ -12,6 +13,7 @@ export class TasksService {
     private readonly taskRepository: Repository<Task>,
     @InjectRepository(AuditLog)
     private readonly auditLogRepository: Repository<AuditLog>,
+    private readonly organizationScopeService: OrganizationScopeService,
   ) {}
 
   async create(createTaskDto: CreateTaskDto, user: User): Promise<Task> {
@@ -38,7 +40,7 @@ export class TasksService {
       .leftJoinAndSelect('task.assignedTo', 'assignedTo');
 
     // Apply organization and visibility scope based on role
-    this.applyVisibilityScope(query, user);
+    await this.applyVisibilityScope(query, user);
 
     // Apply filters
     this.applyFilters(query, filterDto);
@@ -76,7 +78,7 @@ export class TasksService {
     }
 
     // Check visibility
-    if (!this.canViewTask(task, user)) {
+    if (!(await this.canViewTask(task, user))) {
       throw new NotFoundException('Task not found');
     }
 
@@ -91,7 +93,7 @@ export class TasksService {
     }
 
     // Check update permission (B2 override: Admin can update any task in their org)
-    if (!this.canModifyTask(task, user)) {
+    if (!(await this.canModifyTask(task, user))) {
       throw new ForbiddenException('You do not have permission to update this task');
     }
 
@@ -113,7 +115,7 @@ export class TasksService {
     }
 
     // Check delete permission (B2 override: Admin can delete any task in their org)
-    if (!this.canModifyTask(task, user)) {
+    if (!(await this.canModifyTask(task, user))) {
       throw new ForbiddenException('You do not have permission to delete this task');
     }
 
@@ -129,7 +131,7 @@ export class TasksService {
       throw new NotFoundException('Task not found');
     }
 
-    if (!this.canModifyTask(task, user)) {
+    if (!(await this.canModifyTask(task, user))) {
       throw new ForbiddenException('You do not have permission to reorder this task');
     }
 
@@ -148,10 +150,20 @@ export class TasksService {
       .getOne();
   }
 
-  private applyVisibilityScope(query: SelectQueryBuilder<Task>, user: User): void {
+  private async applyVisibilityScope(
+    query: SelectQueryBuilder<Task>,
+    user: User,
+  ): Promise<void> {
     // Owner can see all tasks in org hierarchy
     if (user.role === Role.OWNER) {
-      query.andWhere('task.organizationId = :orgId', { orgId: user.organizationId });
+      const orgIds = await this.organizationScopeService.getOrganizationScope(
+        user.organizationId,
+      );
+      if (orgIds.length === 0) {
+        query.andWhere('1=0');
+        return;
+      }
+      query.andWhere('task.organizationId IN (:...orgIds)', { orgIds });
       return;
     }
 
@@ -169,15 +181,18 @@ export class TasksService {
     );
   }
 
-  private canViewTask(task: Task, user: User): boolean {
+  private async canViewTask(task: Task, user: User): Promise<boolean> {
+    // Owner can view all tasks in org
+    if (user.role === Role.OWNER) {
+      const orgIds = await this.organizationScopeService.getOrganizationScope(
+        user.organizationId,
+      );
+      return orgIds.includes(task.organizationId);
+    }
+
     // Must be same org
     if (task.organizationId !== user.organizationId) {
       return false;
-    }
-
-    // Owner can view all tasks in org
-    if (user.role === Role.OWNER) {
-      return true;
     }
 
     // Admin can view all tasks in org
@@ -189,15 +204,18 @@ export class TasksService {
     return task.createdById === user.id || task.assignedToId === user.id;
   }
 
-  private canModifyTask(task: Task, user: User): boolean {
+  private async canModifyTask(task: Task, user: User): Promise<boolean> {
+    // Owner can modify all tasks in org
+    if (user.role === Role.OWNER) {
+      const orgIds = await this.organizationScopeService.getOrganizationScope(
+        user.organizationId,
+      );
+      return orgIds.includes(task.organizationId);
+    }
+
     // Must be same org
     if (task.organizationId !== user.organizationId) {
       return false;
-    }
-
-    // Owner can modify all tasks in org
-    if (user.role === Role.OWNER) {
-      return true;
     }
 
     // Admin can modify any task in their org (B2 override)

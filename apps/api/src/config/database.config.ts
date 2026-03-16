@@ -1,5 +1,5 @@
 ﻿import { TypeOrmModuleOptions } from '@nestjs/typeorm';
-import { User, Organization, Task, AuditLog } from '../entities';
+import { User, Organization, Task, AuditLog, RoleTemplate, RefreshToken } from '../entities';
 
 export const getDatabaseConfig = (): TypeOrmModuleOptions => ({
   type: 'postgres',
@@ -8,7 +8,7 @@ export const getDatabaseConfig = (): TypeOrmModuleOptions => ({
   username: process.env.DATABASE_USER || 'postgres',
   password: process.env.DATABASE_PASSWORD || 'devpassword',
   database: process.env.DATABASE_NAME || 'taskmanager_dev',
-  entities: [User, Organization, Task, AuditLog],
+  entities: [User, Organization, Task, AuditLog, RoleTemplate, RefreshToken],
   synchronize: process.env.NODE_ENV !== 'production',
   logging: process.env.NODE_ENV === 'development',
 });

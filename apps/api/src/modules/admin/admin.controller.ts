@@ -2,14 +2,18 @@ import {
   Controller,
   Get,
   Post,
+  Put,
+  Delete,
   Body,
   Param,
   Query,
   UseGuards,
   ParseUUIDPipe,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
-import { ApproveUserDto } from './dto';
+import { ApproveUserDto, CreateRoleTemplateDto, UpdateRoleTemplateDto, UpdateUserRoleDto } from './dto';
 import { User } from '../../entities';
 import { ActiveUserGuard } from '../auth/guards/active-user.guard';
 import {
@@ -52,5 +56,45 @@ export class AdminController {
   @Get('users')
   async getUsers(@Query('organizationId') organizationId?: string) {
     return this.adminService.getUsers(organizationId);
+  }
+
+  @Put('users/:userId/role')
+  async updateUserRole(
+    @Param('userId', ParseUUIDPipe) userId: string,
+    @Body() updateDto: UpdateUserRoleDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.adminService.updateUserRole(userId, updateDto, user);
+  }
+
+  @Get('role-templates')
+  async getRoleTemplates(@Query('organizationId') organizationId?: string) {
+    return this.adminService.getRoleTemplates(organizationId);
+  }
+
+  @Post('role-templates')
+  async createRoleTemplate(
+    @Body() dto: CreateRoleTemplateDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.adminService.createRoleTemplate(dto, user);
+  }
+
+  @Put('role-templates/:templateId')
+  async updateRoleTemplate(
+    @Param('templateId', ParseUUIDPipe) templateId: string,
+    @Body() dto: UpdateRoleTemplateDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.adminService.updateRoleTemplate(templateId, dto, user);
+  }
+
+  @Delete('role-templates/:templateId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteRoleTemplate(
+    @Param('templateId', ParseUUIDPipe) templateId: string,
+    @CurrentUser() user: User,
+  ) {
+    await this.adminService.deleteRoleTemplate(templateId, user);
   }
 }

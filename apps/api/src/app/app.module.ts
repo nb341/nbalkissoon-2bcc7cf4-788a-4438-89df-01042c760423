@@ -10,6 +10,7 @@ import { TasksModule } from '../modules/tasks';
 import { AuditLogModule } from '../modules/audit-log';
 import { AdminModule } from '../modules/admin';
 import { SeedModule } from '../modules/seed';
+import { RateLimitGuard } from '../common/guards/rate-limit.guard';
 
 @Module({
   imports: [
@@ -27,6 +28,10 @@ import { SeedModule } from '../modules/seed';
   controllers: [AppController],
   providers: [
     AppService,
+    {
+      provide: APP_GUARD,
+      useClass: RateLimitGuard,
+    },
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,

@@ -8,6 +8,7 @@ export interface AuthUser {
   role: string | null;
   status: UserStatus;
   organizationId: string | null;
+  roleTemplateId?: string | null;
 }
 
 export interface AuthState {
